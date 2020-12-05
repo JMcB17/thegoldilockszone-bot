@@ -2,7 +2,6 @@ import os
 import time
 
 import praw
-# import prawcore
 
 
 # TODO: add functionality to add the winner to the 'Hall of banned users'
@@ -62,3 +61,5 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
 
         # Ensure no double dipping
         time.sleep(2)
+
+    time.sleep(0.5)
