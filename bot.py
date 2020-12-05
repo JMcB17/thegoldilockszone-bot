@@ -5,6 +5,7 @@ import praw
 
 
 # TODO: add functionality to add the winner to the 'Hall of banned users'
+# TODO: test
 
 
 __version__ = '0.1.0'
