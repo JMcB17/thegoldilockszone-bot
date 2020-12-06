@@ -23,7 +23,10 @@ ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
 HOF_SUBMISSION_ID = ''
 # Determines whether the bot will auto ban the winner and loser, or leave it to be done manually.
 # Intended for lower risk testing.
-BAN_USERS = False
+if os.environ.get('BAN_USERS'):
+    BAN_USERS = os.environ.get('BAN_USERS')
+else:
+    BAN_USERS = False
 
 
 def ban_winner_and_loser(subreddit, top_post, bottom_post, date=None):
