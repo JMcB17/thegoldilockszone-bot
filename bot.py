@@ -5,7 +5,6 @@ import praw
 import bmemcached
 
 
-# TODO: heroku support, including variable persistence with memcache
 # TODO: test
 # TODO: organise code better now that this is going to production
 
@@ -23,6 +22,10 @@ ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
 # The post ID for the Hall of banned users post. Must be created manually as a post on the bot account
 HOF_SUBMISSION_ID = ''
 
+memcache = bmemcached.Client(os.environ['MEMCACHEDCLOUD_SERVERS'].split(','),
+                             os.environ['MEMCACHEDCLOUD_USERNAME'],
+                             os.environ['MEMCACHEDCLOUD_PASSWORD'])
+
 reddit = praw.Reddit(client_id=os.environ['REDDIT_CLIENT_ID'],
                      client_secret=os.environ['REDDIT_CLIENT_SECRET'],
                      password=os.environ['REDDIT_PASSWORD'],
@@ -32,7 +35,7 @@ print('Logged in.')
 
 subreddit = reddit.subreddit(SUBREDDIT)
 
-old_announcement = ''
+old_announcement_id = str(memcache.get('old_announcement_id'))
 
 while True:
     if time.strftime('%H:%M:%S') == RUN_TIME:
@@ -65,9 +68,12 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
                                             flair_id=ANNOUNCEMENT_FLAIR_ID)
         # Sticky today's post and unsticky yesterday's
         new_announcement.mod.distinguish(sticky=True)
-        if old_announcement:
+        if old_announcement_id:
+            old_announcement = reddit.submission(old_announcement_id)
             old_announcement.mod.distinguish(sticky=False)
-        old_announcement = new_announcement
+        # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
+        old_announcement_id = new_announcement.id
+        memcache.set('old_announcement_id', old_announcement_id)
 
         # Edit the hall of fame post
         hof_post = reddit.submission(HOF_SUBMISSION_ID)
