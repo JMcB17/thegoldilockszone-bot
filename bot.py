@@ -19,6 +19,8 @@ USER_AGENT = f'python3.9.0:thegoldilockszone-bot:v{__version__} (by /u/Sgp15)'
 RUN_TIME = '12:00:00'
 # The flair ID for the winner announcement flair
 ANNOUNCEMENT_FLAIR_ID = ''
+# The post ID for the Hall of banned users post. Must be created manually as a post on the bot account
+HOF_SUBMISSION_ID = ''
 
 reddit = praw.Reddit(client_id=os.environ['REDDIT_CLIENT_ID'],
                      client_secret=os.environ['REDDIT_CLIENT_SECRET'],
@@ -28,9 +30,8 @@ reddit = praw.Reddit(client_id=os.environ['REDDIT_CLIENT_ID'],
 print('Logged in.')
 
 subreddit = reddit.subreddit(SUBREDDIT)
-print(subreddit.top(time_filter='day')[0])
-print(subreddit.top(time_filter='day')[-1])
 
+old_announcement = ''
 
 while True:
     if time.strftime('%H:%M:%S') == RUN_TIME:
@@ -53,13 +54,19 @@ while True:
         ban_reason_bottom = f"Least upvoted post of the day {date}"
         subreddit.banned.add(bottom_post.author.name, ban_reason=ban_reason_bottom)
 
+        # Make a new announcement post
         announcement_post_title = f"Today's ({date}) winner and loser!"
         announcement_post_body = f"""u/{top_post.author.name} is our unfortunate [winner]({top_post.permalink})!    
 u/{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!    
 Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!"""
-        subreddit.submit(title=announcement_post_title,
-                         selftext=announcement_post_body,
-                         flair_id=ANNOUNCEMENT_FLAIR_ID)
+        new_announcement = subreddit.submit(title=announcement_post_title,
+                                            selftext=announcement_post_body,
+                                            flair_id=ANNOUNCEMENT_FLAIR_ID)
+         # Sticky today's post and unsticky yesterday's
+        new_announcement.mod.distinguish(sticky=True)
+        if old_announcement:
+            old_announcement.mod.distinguish(sticky=False)
+        old_announcement = new_announcement
 
         # Ensure no double dipping
         time.sleep(2)
