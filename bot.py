@@ -4,7 +4,6 @@ import time
 import praw
 
 
-# TODO: add functionality to add the winner to the 'Hall of banned users'
 # TODO: test
 # TODO: organise code better now that this is going to production
 
