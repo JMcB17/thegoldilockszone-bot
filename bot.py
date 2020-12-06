@@ -83,10 +83,10 @@ def main():
                                                 selftext=announcement_post_body,
                                                 flair_id=ANNOUNCEMENT_FLAIR_ID)
             # Sticky today's post and unsticky yesterday's
-            new_announcement.mod.distinguish(sticky=True)
             if old_announcement_id:
                 old_announcement = reddit.submission(old_announcement_id)
                 old_announcement.mod.distinguish(sticky=False)
+                new_announcement.mod.distinguish(sticky=True)
             # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
             old_announcement_id = new_announcement.id
             memcache.set('old_announcement_id', old_announcement_id)
