@@ -9,7 +9,7 @@ import praw
 # TODO: organise code better now that this is going to production
 
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 SUBREDDIT = 'TheGoldilocksZone'
