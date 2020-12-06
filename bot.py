@@ -5,6 +5,7 @@ import praw
 
 
 # TODO: add functionality to add the winner to the 'Hall of banned users'
+# TODO: add post pinning
 # TODO: test
 
 
