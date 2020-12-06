@@ -2,6 +2,7 @@ import os
 import time
 
 import praw
+import bmemcached
 
 
 # TODO: heroku support, including variable persistence with memcache
