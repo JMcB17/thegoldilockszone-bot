@@ -6,6 +6,7 @@ import bmemcached
 
 
 # TODO: test
+# TODO: add logging
 # TODO: organise code better now that this is going to production
 
 
