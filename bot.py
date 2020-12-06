@@ -21,6 +21,25 @@ RUN_TIME = '12:00:00'
 ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
 # The post ID for the Hall of banned users post. Must be created manually as a post on the bot account
 HOF_SUBMISSION_ID = ''
+# Determines whether the bot will auto ban the winner and loser, or leave it to be done manually.
+# Intended for lower risk testing.
+BAN_USERS = False
+
+
+def ban_winner_and_loser(subreddit, top_post, bottom_post, date=None):
+    if date is None:
+        date = time.strftime('%d/%m/%Y')
+
+    # Ban the top poster for today
+    ban_reason_top = f"Most upvoted post of the day {date}"
+    subreddit.banned.add(top_post.author.name, ban_reason=ban_reason_top)
+
+    # Ban the bottom poster for today
+    ban_reason_bottom = f"Least upvoted post of the day {date}"
+    subreddit.banned.add(bottom_post.author.name, ban_reason=ban_reason_bottom)
+
+
+
 
 memcache = bmemcached.Client(os.environ['MEMCACHEDCLOUD_SERVERS'].split(','),
                              os.environ['MEMCACHEDCLOUD_USERNAME'],
