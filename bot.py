@@ -4,6 +4,7 @@ import time
 import praw
 
 
+# TODO: heroku support, including variable persistence with memcache
 # TODO: test
 # TODO: organise code better now that this is going to production
 
