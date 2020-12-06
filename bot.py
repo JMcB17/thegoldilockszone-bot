@@ -9,7 +9,7 @@ import bmemcached
 # TODO: organise code better now that this is going to production
 
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 
 SUBREDDIT = 'TheGoldilocksZone'
