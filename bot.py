@@ -68,13 +68,8 @@ def main():
 
             date = time.strftime('%d/%m/%Y')
 
-            # Ban the top poster for today
-            ban_reason_top = f"Most upvoted post of the day {date}"
-            subreddit.banned.add(top_post.author.name, ban_reason=ban_reason_top)
-
-            # Ban the bottom poster for today
-            ban_reason_bottom = f"Least upvoted post of the day {date}"
-            subreddit.banned.add(bottom_post.author.name, ban_reason=ban_reason_bottom)
+            if BAN_USERS:
+                ban_winner_and_loser(subreddit, top_post, bottom_post, date)
 
             # Make a new announcement post
             announcement_post_title = f"Today's ({date}) winner and loser!"
