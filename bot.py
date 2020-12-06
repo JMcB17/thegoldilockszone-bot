@@ -5,8 +5,8 @@ import praw
 
 
 # TODO: add functionality to add the winner to the 'Hall of banned users'
-# TODO: add post pinning
 # TODO: test
+# TODO: organise code better now that this is going to production
 
 
 __version__ = '0.1.0'
@@ -18,7 +18,7 @@ USER_AGENT = f'python3.9.0:thegoldilockszone-bot:v{__version__} (by /u/Sgp15)'
 # Time to run each day, in the form hh:mm:ss. This is noon UCT.
 RUN_TIME = '12:00:00'
 # The flair ID for the winner announcement flair
-ANNOUNCEMENT_FLAIR_ID = ''
+ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
 # The post ID for the Hall of banned users post. Must be created manually as a post on the bot account
 HOF_SUBMISSION_ID = ''
 
@@ -62,11 +62,22 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
         new_announcement = subreddit.submit(title=announcement_post_title,
                                             selftext=announcement_post_body,
                                             flair_id=ANNOUNCEMENT_FLAIR_ID)
-         # Sticky today's post and unsticky yesterday's
+        # Sticky today's post and unsticky yesterday's
         new_announcement.mod.distinguish(sticky=True)
         if old_announcement:
             old_announcement.mod.distinguish(sticky=False)
         old_announcement = new_announcement
+
+        # Edit the hall of fame post
+        hof_post = reddit.submission(HOF_SUBMISSION_ID)
+        hof_body_current = hof_post.selftext
+
+        hof_body_addition = f"""    
+u/{top_post.author.name} : [post]({top_post.permalink})    
+u/{bottom_post.author.name} : [post]({bottom_post.permalink})"""
+        hof_body_new = hof_body_current + hof_body_addition
+
+        hof_post.edit(hof_body_new)
 
         # Ensure no double dipping
         time.sleep(2)
