@@ -64,7 +64,7 @@ def main():
 
     subreddit = reddit.subreddit(SUBREDDIT)
 
-    old_announcement_id = str(memcache.get('old_announcement_id'))
+    old_announcement_id = memcache.get('old_announcement_id')
 
     while True:
         if time.strftime('%H:%M:%S') == RUN_TIME:
@@ -92,7 +92,7 @@ def main():
                                                 flair_id=ANNOUNCEMENT_FLAIR_ID)
             # Sticky today's post and unsticky yesterday's
             if old_announcement_id:
-                old_announcement = reddit.submission(old_announcement_id)
+                old_announcement = reddit.submission(str(old_announcement_id))
                 old_announcement.mod.distinguish(sticky=False)
                 new_announcement.mod.distinguish(sticky=True)
             # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
