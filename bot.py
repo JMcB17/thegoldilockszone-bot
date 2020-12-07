@@ -8,7 +8,6 @@ import bmemcached
 
 
 # TODO: test
-# TODO: organise code better now that this is going to production
 # TODO: more elegant time checking
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
 
@@ -54,25 +53,84 @@ else:
     STICKY_ANNOUNCEMENT = 'u/'
 
 
+def get_top_and_bottom_post(subreddit_instance):
+    # Get all top posts for the day
+    posts_today = list(subreddit_instance.top(time_filter='day'))
+    logging.info('Got post list for today.')
+
+    # Sort them by score
+    # Currently, they're sorted by score - the sum of upvotes and downvotes.
+    # However, it's probably possible to get exactly how many upvotes and downvotes they had.
+    posts_today.sort(key=lambda submission: submission.score, reverse=True)
+
+    top_post = first_post_not_exempt(posts_today)
+    logging.info(f'Got top post {top_post.id} by {top_post.author.name}.')
+    bottom_post = first_post_not_exempt(reversed(posts_today))
+    logging.info(f'Got bottom post {bottom_post.id} by {bottom_post.author.name}.')
+
+    return top_post, bottom_post
+
+
 def first_post_not_exempt(post_list, exempt_flair_text=EXEMPT_FLAIR_TEXT):
     for post in post_list:
         if post.author_flair_text != exempt_flair_text:
             return post
 
 
-def ban_winner_and_loser(subreddit, top_post, bottom_post, date=None):
+def ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date=None):
     if date is None:
         date = time.strftime('%d/%m/%Y')
 
     # Ban the top poster for today
     ban_reason_top = f"Most upvoted post of the day {date}"
-    subreddit.banned.add(top_post.author.name, ban_reason=ban_reason_top)
+    subreddit_instance.banned.add(top_post.author.name, ban_reason=ban_reason_top)
     logging.info('Banned winner.')
 
     # Ban the bottom poster for today
     ban_reason_bottom = f"Least upvoted post of the day {date}"
-    subreddit.banned.add(bottom_post.author.name, ban_reason=ban_reason_bottom)
+    subreddit_instance.banned.add(bottom_post.author.name, ban_reason=ban_reason_bottom)
     logging.info('Banned loser.')
+
+
+def create_new_announcement_post(subreddit_instance, date, top_post, bottom_post):
+    announcement_post_title = f"Today's ({date}) winner and loser!"
+    announcement_post_body = f"""{USER_MENTION}{top_post.author.name} is our unfortunate \
+[winner]({top_post.permalink})!    
+u/{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!    
+Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!"""
+    new_announcement = subreddit_instance.submit(title=announcement_post_title,
+                                                 selftext=announcement_post_body,
+                                                 flair_id=ANNOUNCEMENT_FLAIR_ID)
+    logging.info('Created new announcement post.')
+
+    return new_announcement
+
+
+def update_stickied_announcement(reddit_instance, old_announcement_id, new_announcement):
+    if STICKY_ANNOUNCEMENT and old_announcement_id:
+        try:
+            old_announcement = reddit_instance.submission(str(old_announcement_id))
+        except prawcore.exceptions.NotFound:
+            logging.error('Unable to get the last announcement post to unsticky it. Skipping.')
+        else:
+            logging.info(f'Got the old announcement post {old_announcement_id}.')
+            old_announcement.mod.distinguish(sticky=False)
+            new_announcement.mod.distinguish(sticky=True)
+            logging.info('Stickied the new announcement post and unstickied the old one.')
+
+
+def update_hall_of_fame_post(reddit_instance, top_post, bottom_post):
+    hof_post = reddit_instance.submission(HOF_SUBMISSION_ID)
+    logging.info(f'Got old hall of fame post {HOF_SUBMISSION_ID}.')
+    hof_body_current = hof_post.selftext
+
+    hof_body_addition = f"""    
+{USER_MENTION}{top_post.author.name} : [post]({top_post.permalink})    
+{USER_MENTION}{bottom_post.author.name} : [post]({bottom_post.permalink})"""
+    hof_body_new = hof_body_current + hof_body_addition
+
+    hof_post.edit(hof_body_new)
+    logging.info('Edited hall of fame post successfully.')
 
 
 def main():
@@ -98,58 +156,22 @@ def main():
             date = time.strftime('%d/%m/%Y')
             logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
 
-            # Get all top posts for the day
-            posts_today = list(subreddit.top(time_filter='day'))
-            logging.info('Got post list for today.')
-            # Sort them by score
-            # Currently, they're sorted by score - the sum of upvotes and downvotes.
-            # However, it's probably possible to get exactly how many upvotes and downvotes they had.
-            posts_today.sort(key=lambda submission: submission.score, reverse=True)
-            top_post = first_post_not_exempt(posts_today)
-            logging.info(f'Got top post {top_post.id} by {top_post.author.name}.')
-            bottom_post = first_post_not_exempt(reversed(posts_today))
-            logging.info(f'Got bottom post {bottom_post.id} by {bottom_post.author.name}.')
+            top_post, bottom_post = get_top_and_bottom_post(subreddit)
 
             if BAN_USERS:
                 ban_winner_and_loser(subreddit, top_post, bottom_post, date)
 
             # Make a new announcement post
-            announcement_post_title = f"Today's ({date}) winner and loser!"
-            announcement_post_body = f"""{USER_MENTION}{top_post.author.name} is our unfortunate \
-[winner]({top_post.permalink})!    
-u/{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!    
-Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!"""
-            new_announcement = subreddit.submit(title=announcement_post_title,
-                                                selftext=announcement_post_body,
-                                                flair_id=ANNOUNCEMENT_FLAIR_ID)
-            logging.info('Created new announcement post.')
+            new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
+
             # Sticky today's post and unsticky yesterday's
-            if STICKY_ANNOUNCEMENT and old_announcement_id:
-                try:
-                    old_announcement = reddit.submission(str(old_announcement_id))
-                except prawcore.exceptions.NotFound:
-                    logging.error('Unable to get the last announcement post to unsticky it. Skipping.')
-                else:
-                    logging.info(f'Got the old announcement post {old_announcement_id}.')
-                    old_announcement.mod.distinguish(sticky=False)
-                    new_announcement.mod.distinguish(sticky=True)
-                    logging.info('Stickied the new announcement post and unstickied the old one.')
+            update_stickied_announcement(reddit, old_announcement_id, new_announcement)
             # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
             old_announcement_id = new_announcement.id
             memcache.set('old_announcement_id', old_announcement_id)
 
             # Edit the hall of fame post
-            hof_post = reddit.submission(HOF_SUBMISSION_ID)
-            logging.info(f'Got old hall of fame post {HOF_SUBMISSION_ID}.')
-            hof_body_current = hof_post.selftext
-
-            hof_body_addition = f"""    
-{USER_MENTION}{top_post.author.name} : [post]({top_post.permalink})    
-{USER_MENTION}{bottom_post.author.name} : [post]({bottom_post.permalink})"""
-            hof_body_new = hof_body_current + hof_body_addition
-
-            hof_post.edit(hof_body_new)
-            logging.info('Edited hall of fame post successfully.')
+            update_hall_of_fame_post(reddit, top_post, bottom_post)
 
             # Ensure no double dipping
             time.sleep(2)
