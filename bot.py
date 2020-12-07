@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 
 import praw
 import bmemcached
@@ -9,8 +10,10 @@ import bmemcached
 # TODO: add logging
 # TODO: organise code better now that this is going to production
 # TODO: more elegant time checking
-# TODO: ignore posts from users with 'exempt' flair
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 __version__ = '0.4.0'
@@ -23,6 +26,8 @@ USER_AGENT = f'python3.9.0:thegoldilockszone-bot:v{__version__} (by /u/Sgp15)'
 RUN_TIME = '12:00:00'
 # The flair ID for the winner announcement flair
 ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
+# Flair text for exempt users
+EXEMPT_FLAIR_TEXT = 'Exempt'
 # The post ID for the Hall of banned users post. Must be created manually as a post on the bot account
 HOF_SUBMISSION_ID = 'k82mtd'
 # Determines whether the bot will auto ban the winner and loser, or leave it to be done manually.
@@ -49,6 +54,12 @@ else:
     STICKY_ANNOUNCEMENT = 'u/'
 
 
+def first_post_not_exempt(post_list, exempt_flair_text=EXEMPT_FLAIR_TEXT):
+    for post in post_list:
+        if post.author_flair_text != exempt_flair_text:
+            return post
+
+
 def ban_winner_and_loser(subreddit, top_post, bottom_post, date=None):
     if date is None:
         date = time.strftime('%d/%m/%Y')
@@ -72,7 +83,7 @@ def main():
                          password=os.environ['REDDIT_PASSWORD'],
                          user_agent=USER_AGENT,
                          username=os.environ['REDDIT_USERNAME'])
-    print('Logged in.')
+    logging.info('Logged in.')
 
     subreddit = reddit.subreddit(SUBREDDIT)
 
@@ -86,8 +97,8 @@ def main():
             # Currently, they're sorted by score - the sum of upvotes and downvotes.
             # However, it's probably possible to get exactly how many upvotes and downvotes they had.
             posts_today.sort(key=lambda submission: submission.score, reverse=True)
-            top_post = posts_today[0]
-            bottom_post = posts_today[-1]
+            top_post = first_post_not_exempt(posts_today)
+            bottom_post = first_post_not_exempt(reversed(posts_today))
 
             date = time.strftime('%d/%m/%Y')
 
