@@ -8,6 +8,7 @@ import bmemcached
 # TODO: test
 # TODO: add logging
 # TODO: organise code better now that this is going to production
+# TODO: account for post length limit by letting bot create new consecutive hall of fame posts
 
 
 __version__ = '0.4.0'
@@ -21,7 +22,7 @@ RUN_TIME = '12:00:00'
 # The flair ID for the winner announcement flair
 ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
 # The post ID for the Hall of banned users post. Must be created manually as a post on the bot account
-HOF_SUBMISSION_ID = ''
+HOF_SUBMISSION_ID = 'k82mtd'
 # Determines whether the bot will auto ban the winner and loser, or leave it to be done manually.
 # Intended for lower risk testing.
 if os.environ.get('BAN_USERS'):
