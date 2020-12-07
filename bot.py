@@ -1,3 +1,16 @@
+#!/usr/bin/env python
+
+"""Bot for subreddit r/TheGoldilocksZone. Bans the users with the most downvoted and upvoted posts on the sub every day.
+
+Environment variables:
+    BAN_USERS -- users will be auto-banned if this is set to 'True'.
+    STICKY_ANNOUNCEMENT -- new daily announcement post will be auto-stickied if this is set to 'True'.
+
+    MEMCACHEDCLOUD_SERVERS, MEMCACHEDCLOUD_USERNAME, MEMCACHEDCLOUD_PASSWORD -- login for memcache.
+
+    REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_PASSWORD, REDDIT_USERNAME -- login for reddit account, should be mod.
+"""
+
 import os
 import time
 import logging
@@ -15,7 +28,7 @@ import bmemcached
 logging.basicConfig(level=logging.INFO)
 
 
-__version__ = '0.5.0'
+__version__ = '0.6.0'
 
 
 SUBREDDIT = 'TheGoldilocksZone'
@@ -54,6 +67,7 @@ else:
 
 
 def get_top_and_bottom_post(subreddit_instance):
+    """Get the posts with highest and lowest score for the last day in a subreddit."""
     # Get all top posts for the day
     posts_today = list(subreddit_instance.top(time_filter='day'))
     logging.info('Got post list for today.')
@@ -72,12 +86,14 @@ def get_top_and_bottom_post(subreddit_instance):
 
 
 def first_post_not_exempt(post_list, exempt_flair_text=EXEMPT_FLAIR_TEXT):
+    """Return the first submission object in the list whose author does not have the exempt flair."""
     for post in post_list:
         if post.author_flair_text != exempt_flair_text:
             return post
 
 
 def ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date=None):
+    """Ban the authors of the two given posts from the given subreddit."""
     if date is None:
         date = time.strftime('%d/%m/%Y')
 
@@ -93,11 +109,13 @@ def ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date=None):
 
 
 def create_new_announcement_post(subreddit_instance, date, top_post, bottom_post):
+    """Submit a new announcement post, and return it as a submission object."""
     announcement_post_title = f"Today's ({date}) winner and loser!"
     announcement_post_body = f"""{USER_MENTION}{top_post.author.name} is our unfortunate \
 [winner]({top_post.permalink})!    
 u/{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!    
 Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!"""
+
     new_announcement = subreddit_instance.submit(title=announcement_post_title,
                                                  selftext=announcement_post_body,
                                                  flair_id=ANNOUNCEMENT_FLAIR_ID)
@@ -107,7 +125,8 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
 
 
 def update_stickied_announcement(reddit_instance, old_announcement_id, new_announcement):
-    if STICKY_ANNOUNCEMENT and old_announcement_id:
+    """Unsticky the post with ID old_announcement_id, and sticky the new one given as an object."""
+    if old_announcement_id:
         try:
             old_announcement = reddit_instance.submission(str(old_announcement_id))
         except prawcore.exceptions.NotFound:
@@ -119,9 +138,10 @@ def update_stickied_announcement(reddit_instance, old_announcement_id, new_annou
             logging.info('Stickied the new announcement post and unstickied the old one.')
 
 
-def update_hall_of_fame_post(reddit_instance, top_post, bottom_post):
-    hof_post = reddit_instance.submission(HOF_SUBMISSION_ID)
-    logging.info(f'Got old hall of fame post {HOF_SUBMISSION_ID}.')
+def update_hall_of_fame_post(reddit_instance, top_post, bottom_post, hof_submission_id=HOF_SUBMISSION_ID):
+    """Edit the hall of fame post with ID HOF_SUBMISSION_ID to append the given posts to it."""
+    hof_post = reddit_instance.submission(hof_submission_id)
+    logging.info(f'Got old hall of fame post {hof_submission_id}.')
     hof_body_current = hof_post.selftext
 
     hof_body_addition = f"""    
@@ -134,6 +154,7 @@ def update_hall_of_fame_post(reddit_instance, top_post, bottom_post):
 
 
 def main():
+    """Run the bot."""
     memcache = bmemcached.Client(os.environ['MEMCACHEDCLOUD_SERVERS'].split(','),
                                  os.environ['MEMCACHEDCLOUD_USERNAME'],
                                  os.environ['MEMCACHEDCLOUD_PASSWORD'])
@@ -165,7 +186,8 @@ def main():
             new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
 
             # Sticky today's post and unsticky yesterday's
-            update_stickied_announcement(reddit, old_announcement_id, new_announcement)
+            if STICKY_ANNOUNCEMENT:
+                update_stickied_announcement(reddit, old_announcement_id, new_announcement)
             # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
             old_announcement_id = new_announcement.id
             memcache.set('old_announcement_id', old_announcement_id)
