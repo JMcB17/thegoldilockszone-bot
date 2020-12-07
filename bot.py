@@ -18,10 +18,10 @@ import logging
 import praw
 import prawcore
 import bmemcached
+import dateutil.rrule
 
 
 # TODO: test
-# TODO: more elegant time checking
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
 
 
@@ -34,8 +34,8 @@ __version__ = '0.6.0'
 SUBREDDIT = 'TheGoldilocksZone'
 USER_AGENT = f'python3.9.0:thegoldilockszone-bot:v{__version__} (by /u/Sgp15)'
 
-# Time to run each day, in the form hh:mm:ss. This is noon UCT.
-RUN_TIME = '12:00:00'
+# Hour (24H) to run each day. This is noon UCT.
+RUN_TIME = 12
 # The flair ID for the winner announcement flair
 ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
 # Flair text for exempt users
@@ -64,6 +64,15 @@ if os.environ.get('USER_MENTION'):
     USER_MENTION = os.environ.get('USER_MENTION')
 else:
     STICKY_ANNOUNCEMENT = 'u/'
+
+
+def get_time_till_next_run(run_hour=RUN_TIME):
+    next_run_datetime = list(dateutil.rrule.rrule(freq=dateutil.rrule.HOURLY, count=1,
+                                                  byhour=run_hour, byminute=0, bysecond=0))[0]
+    next_run_seconds = next_run_datetime.timestamp()
+    time_till_next_run = next_run_seconds - time.time()
+
+    return time_till_next_run
 
 
 def get_top_and_bottom_post(subreddit_instance):
@@ -173,32 +182,33 @@ def main():
     old_announcement_id = memcache.get('old_announcement_id')
 
     while True:
-        if time.strftime('%H:%M:%S') == RUN_TIME:
-            date = time.strftime('%d/%m/%Y')
-            logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
+        # Wait until it's time to run each day
+        time.sleep(get_time_till_next_run())
 
-            top_post, bottom_post = get_top_and_bottom_post(subreddit)
+        # Do the stuff
+        date = time.strftime('%d/%m/%Y')
+        logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
 
-            if BAN_USERS:
-                ban_winner_and_loser(subreddit, top_post, bottom_post, date)
+        top_post, bottom_post = get_top_and_bottom_post(subreddit)
 
-            # Make a new announcement post
-            new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
+        if BAN_USERS:
+            ban_winner_and_loser(subreddit, top_post, bottom_post, date)
 
-            # Sticky today's post and unsticky yesterday's
-            if STICKY_ANNOUNCEMENT:
-                update_stickied_announcement(reddit, old_announcement_id, new_announcement)
-            # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
-            old_announcement_id = new_announcement.id
-            memcache.set('old_announcement_id', old_announcement_id)
+        # Make a new announcement post
+        new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
 
-            # Edit the hall of fame post
-            update_hall_of_fame_post(reddit, top_post, bottom_post)
+        # Sticky today's post and unsticky yesterday's
+        if STICKY_ANNOUNCEMENT:
+            update_stickied_announcement(reddit, old_announcement_id, new_announcement)
+        # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
+        old_announcement_id = new_announcement.id
+        memcache.set('old_announcement_id', old_announcement_id)
 
-            # Ensure no double dipping
-            time.sleep(2)
+        # Edit the hall of fame post
+        update_hall_of_fame_post(reddit, top_post, bottom_post)
 
-        time.sleep(0.5)
+        # Ensure no double dipping
+        time.sleep(2)
 
 
 if __name__ == '__main__':
