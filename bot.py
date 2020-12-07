@@ -86,6 +86,7 @@ def main():
                          password=os.environ['REDDIT_PASSWORD'],
                          user_agent=USER_AGENT,
                          username=os.environ['REDDIT_USERNAME'])
+    reddit.validate_on_submit = True
     logging.info('Logged in.')
 
     subreddit = reddit.subreddit(SUBREDDIT)
