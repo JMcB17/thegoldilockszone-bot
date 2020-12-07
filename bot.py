@@ -8,6 +8,9 @@ import bmemcached
 # TODO: test
 # TODO: add logging
 # TODO: organise code better now that this is going to production
+# TODO: add toggle for user mentioning like BAN_USERS constant
+# TODO: more elegant time checking
+# TODO: ignore posts from users with 'exempt' flair
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
 
 
