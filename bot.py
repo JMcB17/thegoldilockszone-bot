@@ -32,9 +32,17 @@ if os.environ.get('BAN_USERS'):
     if os.environ.get('BAN_USERS') == 'True':
         BAN_USERS = True
     else:
-        BAN_USERS = True
+        BAN_USERS = False
 else:
     BAN_USERS = False
+# Whether or not to sticky the announcement post
+if os.environ.get('STICKY_ANNOUNCEMENT'):
+    if os.environ.get('STICKY_ANNOUNCEMENT') == 'True':
+        STICKY_ANNOUNCEMENT = True
+    else:
+        STICKY_ANNOUNCEMENT = False
+else:
+    STICKY_ANNOUNCEMENT = True
 
 
 def ban_winner_and_loser(subreddit, top_post, bottom_post, date=None):
@@ -91,7 +99,7 @@ def main():
                                                 selftext=announcement_post_body,
                                                 flair_id=ANNOUNCEMENT_FLAIR_ID)
             # Sticky today's post and unsticky yesterday's
-            if old_announcement_id:
+            if STICKY_ANNOUNCEMENT and old_announcement_id:
                 old_announcement = reddit.submission(str(old_announcement_id))
                 old_announcement.mod.distinguish(sticky=False)
                 new_announcement.mod.distinguish(sticky=True)
