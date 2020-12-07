@@ -3,6 +3,7 @@ import time
 import logging
 
 import praw
+import prawcore
 import bmemcached
 
 
@@ -67,16 +68,19 @@ def ban_winner_and_loser(subreddit, top_post, bottom_post, date=None):
     # Ban the top poster for today
     ban_reason_top = f"Most upvoted post of the day {date}"
     subreddit.banned.add(top_post.author.name, ban_reason=ban_reason_top)
+    logging.info('Banned winner.')
 
     # Ban the bottom poster for today
     ban_reason_bottom = f"Least upvoted post of the day {date}"
     subreddit.banned.add(bottom_post.author.name, ban_reason=ban_reason_bottom)
+    logging.info('Banned loser.')
 
 
 def main():
     memcache = bmemcached.Client(os.environ['MEMCACHEDCLOUD_SERVERS'].split(','),
                                  os.environ['MEMCACHEDCLOUD_USERNAME'],
                                  os.environ['MEMCACHEDCLOUD_PASSWORD'])
+    logging.info('Connected to memcache.')
 
     reddit = praw.Reddit(client_id=os.environ['REDDIT_CLIENT_ID'],
                          client_secret=os.environ['REDDIT_CLIENT_SECRET'],
@@ -116,9 +120,15 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
                                                 flair_id=ANNOUNCEMENT_FLAIR_ID)
             # Sticky today's post and unsticky yesterday's
             if STICKY_ANNOUNCEMENT and old_announcement_id:
-                old_announcement = reddit.submission(str(old_announcement_id))
-                old_announcement.mod.distinguish(sticky=False)
-                new_announcement.mod.distinguish(sticky=True)
+                try:
+                    old_announcement = reddit.submission(str(old_announcement_id))
+                except prawcore.exceptions.NotFound:
+                    logging.error('Unable to get the last announcement post to unsticky it. Skipping.')
+                else:
+                    logging.info(f'Got the old announcement post {old_announcement_id}.')
+                    old_announcement.mod.distinguish(sticky=False)
+                    new_announcement.mod.distinguish(sticky=True)
+                    logging.info('Stickied the new announcement post and unstickied the old one.')
             # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
             old_announcement_id = new_announcement.id
             memcache.set('old_announcement_id', old_announcement_id)
