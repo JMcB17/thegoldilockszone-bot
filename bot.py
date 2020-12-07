@@ -29,7 +29,10 @@ HOF_SUBMISSION_ID = 'k82mtd'
 # Determines whether the bot will auto ban the winner and loser, or leave it to be done manually.
 # Intended for lower risk testing.
 if os.environ.get('BAN_USERS'):
-    BAN_USERS = os.environ.get('BAN_USERS')
+    if os.environ.get('BAN_USERS') == 'True':
+        BAN_USERS = True
+    else:
+        BAN_USERS = True
 else:
     BAN_USERS = False
 
