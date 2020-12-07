@@ -8,7 +8,6 @@ import bmemcached
 # TODO: test
 # TODO: add logging
 # TODO: organise code better now that this is going to production
-# TODO: add toggle for user mentioning like BAN_USERS constant
 # TODO: more elegant time checking
 # TODO: ignore posts from users with 'exempt' flair
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
@@ -43,6 +42,11 @@ if os.environ.get('STICKY_ANNOUNCEMENT'):
         STICKY_ANNOUNCEMENT = False
 else:
     STICKY_ANNOUNCEMENT = True
+# String to be added before usernames, u/ if you want to mention them or empty otherwise
+if os.environ.get('USER_MENTION'):
+    USER_MENTION = os.environ.get('USER_MENTION')
+else:
+    STICKY_ANNOUNCEMENT = 'u/'
 
 
 def ban_winner_and_loser(subreddit, top_post, bottom_post, date=None):
@@ -92,9 +96,10 @@ def main():
 
             # Make a new announcement post
             announcement_post_title = f"Today's ({date}) winner and loser!"
-            announcement_post_body = f"""u/{top_post.author.name} is our unfortunate [winner]({top_post.permalink})!    
-    u/{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!    
-    Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!"""
+            announcement_post_body = f"""{USER_MENTION}{top_post.author.name} is our unfortunate \
+[winner]({top_post.permalink})!    
+u/{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!    
+Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!"""
             new_announcement = subreddit.submit(title=announcement_post_title,
                                                 selftext=announcement_post_body,
                                                 flair_id=ANNOUNCEMENT_FLAIR_ID)
@@ -112,8 +117,8 @@ def main():
             hof_body_current = hof_post.selftext
 
             hof_body_addition = f"""    
-    u/{top_post.author.name} : [post]({top_post.permalink})    
-    u/{bottom_post.author.name} : [post]({bottom_post.permalink})"""
+{USER_MENTION}{top_post.author.name} : [post]({top_post.permalink})    
+{USER_MENTION}{bottom_post.author.name} : [post]({bottom_post.permalink})"""
             hof_body_new = hof_body_current + hof_body_addition
 
             hof_post.edit(hof_body_new)
