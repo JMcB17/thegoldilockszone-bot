@@ -16,7 +16,7 @@ import bmemcached
 logging.basicConfig(level=logging.INFO)
 
 
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 
 
 SUBREDDIT = 'TheGoldilocksZone'
@@ -79,7 +79,7 @@ def main():
     memcache = bmemcached.Client(os.environ['MEMCACHEDCLOUD_SERVERS'].split(','),
                                  os.environ['MEMCACHEDCLOUD_USERNAME'],
                                  os.environ['MEMCACHEDCLOUD_PASSWORD'])
-    logging.info('Connected to memcache.')
+    logging.debug('Connected to memcache.')
 
     reddit = praw.Reddit(client_id=os.environ['REDDIT_CLIENT_ID'],
                          client_secret=os.environ['REDDIT_CLIENT_SECRET'],
@@ -95,7 +95,8 @@ def main():
 
     while True:
         if time.strftime('%H:%M:%S') == RUN_TIME:
-            logging.info(f"The time is {time.strftime('%H:%M:%S')}, running.")
+            date = time.strftime('%d/%m/%Y')
+            logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
 
             # Get all top posts for the day
             posts_today = list(subreddit.top(time_filter='day'))
@@ -108,8 +109,6 @@ def main():
             logging.info(f'Got top post {top_post.id} by {top_post.author.name}.')
             bottom_post = first_post_not_exempt(reversed(posts_today))
             logging.info(f'Got bottom post {bottom_post.id} by {bottom_post.author.name}.')
-
-            date = time.strftime('%d/%m/%Y')
 
             if BAN_USERS:
                 ban_winner_and_loser(subreddit, top_post, bottom_post, date)
