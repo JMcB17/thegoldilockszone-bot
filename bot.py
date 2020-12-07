@@ -8,7 +8,6 @@ import bmemcached
 
 
 # TODO: test
-# TODO: add logging
 # TODO: organise code better now that this is going to production
 # TODO: more elegant time checking
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
@@ -95,14 +94,19 @@ def main():
 
     while True:
         if time.strftime('%H:%M:%S') == RUN_TIME:
+            logging.info(f"The time is {time.strftime('%H:%M:%S')}, running.")
+
             # Get all top posts for the day
             posts_today = list(subreddit.top(time_filter='day'))
+            logging.info('Got post list for today.')
             # Sort them by score
             # Currently, they're sorted by score - the sum of upvotes and downvotes.
             # However, it's probably possible to get exactly how many upvotes and downvotes they had.
             posts_today.sort(key=lambda submission: submission.score, reverse=True)
             top_post = first_post_not_exempt(posts_today)
+            logging.info(f'Got top post {top_post.id} by {top_post.author.name}.')
             bottom_post = first_post_not_exempt(reversed(posts_today))
+            logging.info(f'Got bottom post {bottom_post.id} by {bottom_post.author.name}.')
 
             date = time.strftime('%d/%m/%Y')
 
@@ -118,6 +122,7 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
             new_announcement = subreddit.submit(title=announcement_post_title,
                                                 selftext=announcement_post_body,
                                                 flair_id=ANNOUNCEMENT_FLAIR_ID)
+            logging.info('Created new announcement post.')
             # Sticky today's post and unsticky yesterday's
             if STICKY_ANNOUNCEMENT and old_announcement_id:
                 try:
@@ -135,6 +140,7 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
 
             # Edit the hall of fame post
             hof_post = reddit.submission(HOF_SUBMISSION_ID)
+            logging.info(f'Got old hall of fame post {HOF_SUBMISSION_ID}.')
             hof_body_current = hof_post.selftext
 
             hof_body_addition = f"""    
@@ -143,6 +149,7 @@ Keep the posts coming fellas, you could be added to our hall of winners and lose
             hof_body_new = hof_body_current + hof_body_addition
 
             hof_post.edit(hof_body_new)
+            logging.info('Edited hall of fame post successfully.')
 
             # Ensure no double dipping
             time.sleep(2)
