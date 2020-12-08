@@ -64,6 +64,14 @@ if os.environ.get('USER_MENTION'):
     USER_MENTION = os.environ.get('USER_MENTION')
 else:
     USER_MENTION = 'u/'
+# If this constant is True, the bot will run on start as well as at the designated time
+if os.environ.get('RUN_ON_START'):
+    if os.environ.get('RUN_ON_START') == 'True':
+        RUN_ON_START = True
+    else:
+        RUN_ON_START = False
+else:
+    RUN_ON_START = True
 
 
 def get_time_till_next_run(run_hour=RUN_TIME):
@@ -164,6 +172,8 @@ def update_hall_of_fame_post(reddit_instance, top_post, bottom_post, hof_submiss
 
 def main():
     """Run the bot."""
+    run_on_start = RUN_ON_START
+
     memcache = bmemcached.Client(os.environ['MEMCACHEDCLOUD_SERVERS'].split(','),
                                  os.environ['MEMCACHEDCLOUD_USERNAME'],
                                  os.environ['MEMCACHEDCLOUD_PASSWORD'])
@@ -183,7 +193,10 @@ def main():
 
     while True:
         # Wait until it's time to run each day
-        time.sleep(get_time_till_next_run())
+        if run_on_start:
+            run_on_start = False
+        else:
+            time.sleep(get_time_till_next_run())
 
         # Do the stuff
         date = time.strftime('%d/%m/%Y')
