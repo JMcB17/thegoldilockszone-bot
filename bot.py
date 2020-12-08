@@ -161,9 +161,11 @@ def update_hall_of_fame_post(reddit_instance, top_post, bottom_post, hof_submiss
     logging.info(f'Got old hall of fame post {hof_submission_id}.')
     hof_body_current = hof_post.selftext
 
-    hof_body_addition = f"""    
-{USER_MENTION}{top_post.author.name} : [post]({top_post.permalink})    
-{USER_MENTION}{bottom_post.author.name} : [post]({bottom_post.permalink})"""
+    hof_body_addition = f"""
+
+{USER_MENTION}{top_post.author.name} : [Post]({top_post.permalink})
+
+{USER_MENTION}{bottom_post.author.name} : [Post]({bottom_post.permalink})"""
     hof_body_new = hof_body_current + hof_body_addition
 
     hof_post.edit(hof_body_new)
