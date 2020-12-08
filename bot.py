@@ -128,10 +128,14 @@ def ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date=None):
 def create_new_announcement_post(subreddit_instance, date, top_post, bottom_post):
     """Submit a new announcement post, and return it as a submission object."""
     announcement_post_title = f"Today's ({date}) winner and loser!"
-    announcement_post_body = f"""{USER_MENTION}{top_post.author.name} is our unfortunate \
-[winner]({top_post.permalink})!    
-u/{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!    
-Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!"""
+    announcement_post_body = f"""\
+{USER_MENTION}{top_post.author.name} is our unfortunate [winner]({top_post.permalink})!
+
+{USER_MENTION}{bottom_post.author.name} is our equally as unfortunate [loser]({bottom_post.permalink})!
+
+Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!
+
+(Bans are currently manual until we turn them on in the bot, if you won or lost you should be banned shortly.)"""
 
     new_announcement = subreddit_instance.submit(title=announcement_post_title,
                                                  selftext=announcement_post_body,
@@ -162,7 +166,6 @@ def update_hall_of_fame_post(reddit_instance, top_post, bottom_post, hof_submiss
     hof_body_current = hof_post.selftext
 
     hof_body_addition = f"""
-
 {USER_MENTION}{top_post.author.name} : [Post]({top_post.permalink})
 
 {USER_MENTION}{bottom_post.author.name} : [Post]({bottom_post.permalink})"""
