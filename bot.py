@@ -205,7 +205,7 @@ def main():
             time.sleep(get_time_till_next_run())
 
         # Do the stuff
-        date = time.strftime('%d/%m/%Y')
+        date = time.strftime('%d/%m/%y')
         logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
 
         top_post, bottom_post = get_top_and_bottom_post(subreddit)
