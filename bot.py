@@ -23,6 +23,7 @@ import dateutil.rrule
 
 # TODO: test - almost done mostly
 # TODO: more error catching so that if one bit breaks the rest will still work
+# TODO: list of win and lose posts to avoid getting them again?
 # TODO: win/loss flairs - assign a special flair to the winning and losing post
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
 
@@ -204,7 +205,9 @@ def main():
             logging.info('Forcing run due to RUN_ON_START.')
             run_on_start = False
         else:
-            time.sleep(get_time_till_next_run())
+            sleep_time = get_time_till_next_run()
+            logging.info(f'Sleeping for {int(sleep_time)} seconds ({round(sleep_time/(60**2), 2)} hours)')
+            time.sleep(sleep_time)
 
         # Do the stuff
         date = time.strftime('%d/%m/%y')
