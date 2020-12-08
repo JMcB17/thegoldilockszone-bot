@@ -21,7 +21,9 @@ import bmemcached
 import dateutil.rrule
 
 
-# TODO: test
+# TODO: test - almost done mostly
+# TODO: more error catching so that if one bit breaks the rest will still work
+# TODO: win/loss flairs - assign a special flair to the winning and losing post
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
 
 
