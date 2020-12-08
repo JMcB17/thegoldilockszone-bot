@@ -135,7 +135,7 @@ def create_new_announcement_post(subreddit_instance, date, top_post, bottom_post
 
 Keep the posts coming fellas, you could be added to our hall of winners and losers if you’re (un)lucky enough!
 
-(Bans are currently manual until we turn them on in the bot, if you won or lost you should be banned shortly.)"""
+(Bans are currently manual until we turn them on in the bot, if you won or lost you should be banned shortly)"""
 
     new_announcement = subreddit_instance.submit(title=announcement_post_title,
                                                  selftext=announcement_post_body,
