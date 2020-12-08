@@ -63,7 +63,7 @@ else:
 if os.environ.get('USER_MENTION'):
     USER_MENTION = os.environ.get('USER_MENTION')
 else:
-    STICKY_ANNOUNCEMENT = 'u/'
+    USER_MENTION = 'u/'
 
 
 def get_time_till_next_run(run_hour=RUN_TIME):
