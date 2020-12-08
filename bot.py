@@ -71,7 +71,7 @@ if os.environ.get('RUN_ON_START'):
     else:
         RUN_ON_START = False
 else:
-    RUN_ON_START = True
+    RUN_ON_START = False
 
 
 def get_time_till_next_run(run_hour=RUN_TIME):
@@ -194,6 +194,7 @@ def main():
     while True:
         # Wait until it's time to run each day
         if run_on_start:
+            logging.info('Forcing run due to RUN_ON_START.')
             run_on_start = False
         else:
             time.sleep(get_time_till_next_run())
