@@ -40,8 +40,11 @@ USER_AGENT = f'python3.9.0:thegoldilockszone-bot:v{__version__} (by /u/Sgp15)'
 
 # Hour (24H) to run each day. This is noon UCT.
 RUN_TIME = 12
-# The flair ID for the winner announcement flair
+# The flair ID for the winner/loser announcement flair
 ANNOUNCEMENT_FLAIR_ID = 'e682b0e6-358c-11eb-b352-0e5ad39b714b'
+# Flair ID's for winning and losing post
+WINNING_POST_FLAIR_ID = '7b7ff34a-3a40-11eb-9ed7-0efb2112123f'
+LOSING_POST_FLAIR_ID = '982d065e-3a40-11eb-abc3-0ef0302db2ed'
 # Flair text for exempt users
 EXEMPT_FLAIR_TEXT = 'Exempt'
 # The post ID for the Hall of banned users post. Must be created manually as a post on the bot account
@@ -139,6 +142,12 @@ def ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date=None):
     logging.info('Banned loser.')
 
 
+def flair_winning_and_losing_posts(top_post, bottom_post):
+    """Set appropriate flairs for the given posts."""
+    top_post.mod.flair(flair_template_id=WINNING_POST_FLAIR_ID)
+    bottom_post.flair(flair_template_id=LOSING_POST_FLAIR_ID)
+
+
 def create_new_announcement_post(subreddit_instance, date, top_post, bottom_post):
     """Submit a new announcement post, and return it as a submission object."""
     announcement_post_title = f"Today's ({date}) winner and loser!"
@@ -232,6 +241,7 @@ def main():
         else:
             if BAN_USERS:
                 ban_winner_and_loser(subreddit, top_post, bottom_post, date)
+            flair_winning_and_losing_posts(top_post, bottom_post)
 
             # Make a new announcement post
             new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
