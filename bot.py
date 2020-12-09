@@ -31,7 +31,7 @@ import dateutil.rrule
 logging.basicConfig(level=logging.INFO)
 
 
-__version__ = '0.6.0'
+__version__ = '0.7.0'
 
 
 SUBREDDIT = 'TheGoldilocksZone'
