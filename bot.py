@@ -24,7 +24,6 @@ import dateutil.rrule
 # TODO: test - almost done mostly
 # TODO: more error catching so that if one bit breaks the rest will still work
 # TODO: list of win and lose posts to avoid getting them again?
-# TODO: win/loss flairs - assign a special flair to the winning and losing post
 # TODO: make the hof update and announcement post strings constants for easier editing?
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
 
