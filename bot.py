@@ -168,8 +168,8 @@ def update_stickied_announcement(reddit_instance, old_announcement_id, new_annou
             logging.exception('Unable to get the last announcement post to unsticky it. Skipping.')
         else:
             logging.info(f'Got the old announcement post {old_announcement_id}.')
-            old_announcement.mod.distinguish(sticky=False)
-            new_announcement.mod.distinguish(sticky=True)
+            old_announcement.mod.sticky(state=False)
+            new_announcement.mod.sticky(state=True)
             logging.info('Stickied the new announcement post and unstickied the old one.')
 
 
