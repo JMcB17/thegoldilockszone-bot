@@ -82,6 +82,7 @@ else:
 
 
 def get_time_till_next_run(run_hour=RUN_TIME):
+    """Return the time in seconds until the next instance of the first second in the given hour."""
     next_run_datetime = list(dateutil.rrule.rrule(freq=dateutil.rrule.HOURLY, count=1,
                                                   byhour=run_hour, byminute=0, bysecond=0))[0]
     next_run_seconds = next_run_datetime.timestamp()
