@@ -88,7 +88,7 @@ def get_time_till_next_run(run_hour=RUN_TIME):
     return time_till_next_run
 
 
-def get_top_and_bottom_post(subreddit_instance):
+def get_top_and_bottom_post(reddit_instance, subreddit_instance):
     """Get the posts with highest and lowest score for the last day in a subreddit."""
     # Get all top posts for the day
     posts_today = list(subreddit_instance.top(time_filter='day'))
@@ -99,19 +99,29 @@ def get_top_and_bottom_post(subreddit_instance):
     # However, it's probably possible to get exactly how many upvotes and downvotes they had.
     posts_today.sort(key=lambda submission: submission.score, reverse=True)
 
-    top_post = first_post_not_exempt(posts_today)
+    top_post = first_post_not_exempt(reddit_instance, subreddit_instance, posts_today)
     logging.info(f'Got top post {top_post.id} by {top_post.author.name}.')
-    bottom_post = first_post_not_exempt(reversed(posts_today))
+    bottom_post = first_post_not_exempt(reddit_instance, subreddit_instance, reversed(posts_today))
     logging.info(f'Got bottom post {bottom_post.id} by {bottom_post.author.name}.')
 
     return top_post, bottom_post
 
 
-def first_post_not_exempt(post_list, exempt_flair_text=EXEMPT_FLAIR_TEXT):
+def first_post_not_exempt(reddit_instance, subreddit_instance, post_list, exempt_flair_text=EXEMPT_FLAIR_TEXT):
     """Return the first submission object in the list whose author does not have the exempt flair."""
+    mod_list = subreddit_instance.moderator()
+
     for post in post_list:
-        if post.author_flair_text != exempt_flair_text:
-            return post
+        # Make sure post doesn't have exempt flair
+        if post.author.name not in mod_list:
+            # Make sure post author is not the account bot is logged in as
+            if post.author_flair_text != exempt_flair_text:
+                # Make sure author is not mod in the active sub
+                if post.author.name != reddit_instance.user.me().name:
+                    return post
+
+    # If no non-exempt post, raise an error
+    raise IndexError('No non-exempt post in post list.')
 
 
 def ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date=None):
@@ -216,7 +226,7 @@ def main():
         date = time.strftime('%d/%m/%y')
         logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
 
-        top_post, bottom_post = get_top_and_bottom_post(subreddit)
+        top_post, bottom_post = get_top_and_bottom_post(reddit, subreddit)
 
         if BAN_USERS:
             ban_winner_and_loser(subreddit, top_post, bottom_post, date)
