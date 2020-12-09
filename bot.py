@@ -22,6 +22,7 @@ import dateutil.rrule
 
 
 # TODO: test - almost done mostly
+# TODO: list index out of range catching for if there are not posts
 # TODO: more error catching so that if one bit breaks the rest will still work
 # TODO: list of win and lose posts to avoid getting them again?
 # TODO: win/loss flairs - assign a special flair to the winning and losing post
