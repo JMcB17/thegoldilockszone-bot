@@ -79,6 +79,8 @@ if os.environ.get('RUN_ON_START'):
         RUN_ON_START = False
 else:
     RUN_ON_START = False
+# Whether to run once or run forever, set to false right now to use Heroku Scheduler
+RUN_FOREVER = False
 
 
 def get_time_till_next_run(run_hour=RUN_TIME):
@@ -251,20 +253,24 @@ def main():
 
     old_announcement_id = memcache.get('old_announcement_id')
 
-    while True:
-        # Wait until it's time to run each day
-        if run_on_start:
-            logging.info('Forcing run due to RUN_ON_START.')
-            run_on_start = False
-        else:
-            sleep_time = get_time_till_next_run()
-            logging.info(f'Sleeping for {int(sleep_time)} seconds ({round(sleep_time/(60**2), 2)} hours)')
-            time.sleep(sleep_time)
+    if RUN_FOREVER:
+        while True:
+            # Wait until it's time to run each day
+            if run_on_start:
+                logging.info('Forcing run due to RUN_ON_START.')
+                run_on_start = False
+            else:
+                sleep_time = get_time_till_next_run()
+                logging.info(f'Sleeping for {int(sleep_time)} seconds ({round(sleep_time/(60**2), 2)} hours)')
+                time.sleep(sleep_time)
 
+            run_once(reddit, subreddit, memcache, old_announcement_id)
+
+            # Ensure no double dipping
+            time.sleep(2)
+
+    else:
         run_once(reddit, subreddit, memcache, old_announcement_id)
-
-        # Ensure no double dipping
-        time.sleep(2)
 
 
 if __name__ == '__main__':
