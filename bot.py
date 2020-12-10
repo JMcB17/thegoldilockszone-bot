@@ -22,6 +22,7 @@ import dateutil.rrule
 
 
 # TODO: test - almost done mostly
+# TODO: checking for if the winning and losing post are the same
 # TODO: more error catching so that if one bit breaks the rest will still work
 # TODO: list of win and lose posts to avoid getting them again?
 # TODO: make the hof update and announcement post strings constants for easier editing?
