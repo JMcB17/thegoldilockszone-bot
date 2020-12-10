@@ -23,7 +23,6 @@ import dateutil.rrule
 
 # TODO: test - almost done mostly
 # TODO: checking for if the winning and losing post are the same
-# TODO: more error catching so that if one bit breaks the rest will still work
 # TODO: list of win and lose posts to avoid getting them again?
 # TODO: make the hof update and announcement post strings constants for easier editing?
 # TODO: account for post length limit by letting bot create new consecutive hall of fame posts
@@ -240,22 +239,35 @@ def main():
         except IndexError:
             logging.exception('No valid posts found today! Skipping.')
         else:
-            if BAN_USERS:
-                ban_winner_and_loser(subreddit, top_post, bottom_post, date)
-            flair_winning_and_losing_posts(top_post, bottom_post)
+            try:
+                if BAN_USERS:
+                    ban_winner_and_loser(subreddit, top_post, bottom_post, date)
+            except prawcore.exceptions.PrawcoreException:
+                logging.exception('Error in banning users, skipping.')
+            try:
+                flair_winning_and_losing_posts(top_post, bottom_post)
+            except prawcore.exceptions.PrawcoreException:
+                logging.exception('Error in flairing winning and losing posts, skipping.')
 
-            # Make a new announcement post
-            new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
+            try:
+                # Make a new announcement post
+                new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
 
-            # Sticky today's post and unsticky yesterday's
-            if STICKY_ANNOUNCEMENT:
-                update_stickied_announcement(reddit, old_announcement_id, new_announcement)
-            # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
-            old_announcement_id = new_announcement.id
-            memcache.set('old_announcement_id', old_announcement_id)
+                # Sticky today's post and unsticky yesterday's
+                if STICKY_ANNOUNCEMENT:
+                    update_stickied_announcement(reddit, old_announcement_id, new_announcement)
+                # Make the just created announcement the old one for use next time,
+                # # and save it to memcache for persistence.
+                old_announcement_id = new_announcement.id
+                memcache.set('old_announcement_id', old_announcement_id)
+            except prawcore.exceptions.PrawcoreException:
+                logging.exception('Error in creating or sticking new announcement post, skipping.')
 
-            # Edit the hall of fame post
-            update_hall_of_fame_post(reddit, top_post, bottom_post)
+            try:
+                # Edit the hall of fame post
+                update_hall_of_fame_post(reddit, top_post, bottom_post)
+            except prawcore.exceptions.PrawcoreException:
+                logging.exception('Error in updating announcement post, skipping.')
 
         # Ensure no double dipping
         time.sleep(2)
