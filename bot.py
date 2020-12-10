@@ -200,6 +200,34 @@ def update_hall_of_fame_post(reddit_instance, top_post, bottom_post, hof_submiss
     logging.info('Edited hall of fame post successfully.')
 
 
+def run_once(reddit_instance, subreddit_instance, memcache_instance, old_announcement_id):
+    # Do the stuff
+    date = time.strftime('%d/%m/%y')
+    logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
+
+    try:
+        top_post, bottom_post = get_top_and_bottom_post(reddit_instance, subreddit_instance)
+    except IndexError:
+        logging.exception('No valid posts found today! Skipping.')
+    else:
+        if BAN_USERS:
+            ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date)
+        flair_winning_and_losing_posts(top_post, bottom_post)
+
+        # Make a new announcement post
+        new_announcement = create_new_announcement_post(subreddit_instance, date, top_post, bottom_post)
+
+        # Sticky today's post and unsticky yesterday's
+        if STICKY_ANNOUNCEMENT:
+            update_stickied_announcement(reddit_instance, old_announcement_id, new_announcement)
+        # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
+        old_announcement_id = new_announcement.id
+        memcache_instance.set('old_announcement_id', old_announcement_id)
+
+        # Edit the hall of fame post
+        update_hall_of_fame_post(reddit_instance, top_post, bottom_post)
+
+
 def main():
     """Run the bot."""
     run_on_start = RUN_ON_START
