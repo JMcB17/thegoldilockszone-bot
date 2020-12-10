@@ -227,6 +227,8 @@ def run_once(reddit_instance, subreddit_instance, memcache_instance, old_announc
         # Edit the hall of fame post
         update_hall_of_fame_post(reddit_instance, top_post, bottom_post)
 
+    return old_announcement_id
+
 
 def main():
     """Run the bot."""
@@ -259,31 +261,7 @@ def main():
             logging.info(f'Sleeping for {int(sleep_time)} seconds ({round(sleep_time/(60**2), 2)} hours)')
             time.sleep(sleep_time)
 
-        # Do the stuff
-        date = time.strftime('%d/%m/%y')
-        logging.info(f"The time is {time.strftime('%H:%M:%S')} on {date}, running.")
-
-        try:
-            top_post, bottom_post = get_top_and_bottom_post(reddit, subreddit)
-        except IndexError:
-            logging.exception('No valid posts found today! Skipping.')
-        else:
-            if BAN_USERS:
-                ban_winner_and_loser(subreddit, top_post, bottom_post, date)
-            flair_winning_and_losing_posts(top_post, bottom_post)
-
-            # Make a new announcement post
-            new_announcement = create_new_announcement_post(subreddit, date, top_post, bottom_post)
-
-            # Sticky today's post and unsticky yesterday's
-            if STICKY_ANNOUNCEMENT:
-                update_stickied_announcement(reddit, old_announcement_id, new_announcement)
-            # Make the just created announcement the old one for use next time, and save it to memcache for persistence.
-            old_announcement_id = new_announcement.id
-            memcache.set('old_announcement_id', old_announcement_id)
-
-            # Edit the hall of fame post
-            update_hall_of_fame_post(reddit, top_post, bottom_post)
+        run_once(reddit, subreddit, memcache, old_announcement_id)
 
         # Ensure no double dipping
         time.sleep(2)
