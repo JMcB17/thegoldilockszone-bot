@@ -181,6 +181,7 @@ def update_stickied_announcement(reddit_instance, old_announcement_id, new_annou
         else:
             logging.info(f'Got the old announcement post {old_announcement_id}.')
             old_announcement.mod.sticky(state=False)
+            new_announcement.mod.distinguish()
             new_announcement.mod.sticky(state=True)
             logging.info('Stickied the new announcement post and unstickied the old one.')
 
