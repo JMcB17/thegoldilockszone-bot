@@ -14,6 +14,7 @@ Environment variables:
 import os
 import time
 import logging
+from typing import Tuple
 
 import praw
 import prawcore
@@ -83,7 +84,7 @@ else:
 RUN_FOREVER = False
 
 
-def get_time_till_next_run(run_hour=RUN_TIME):
+def get_time_till_next_run(run_hour: int = RUN_TIME) -> float:
     """Return the time in seconds until the next instance of the first second in the given hour."""
     next_run_datetime = list(dateutil.rrule.rrule(freq=dateutil.rrule.HOURLY, count=1,
                                                   byhour=run_hour, byminute=0, bysecond=0))[0]
@@ -93,7 +94,8 @@ def get_time_till_next_run(run_hour=RUN_TIME):
     return time_till_next_run
 
 
-def get_top_and_bottom_post(reddit_instance, subreddit_instance):
+def get_top_and_bottom_post(reddit_instance: praw.Reddit, subreddit_instance: praw.models.Subreddit) \
+        -> Tuple[praw.models.Submission, praw.models.Submission]:
     """Get the posts with highest and lowest score for the last day in a subreddit."""
     # Get all top posts for the day
     posts_today = list(subreddit_instance.top(time_filter='day'))
@@ -112,7 +114,7 @@ def get_top_and_bottom_post(reddit_instance, subreddit_instance):
     return top_post, bottom_post
 
 
-def first_post_not_exempt(reddit_instance, subreddit_instance, post_list, exempt_flair_text=EXEMPT_FLAIR_TEXT):
+def first_post_not_exempt(reddit_instance: praw.Reddit, subreddit_instance: praw.models.Subreddit, post_list, exempt_flair_text=EXEMPT_FLAIR_TEXT):
     """Return the first submission object in the list whose author does not have the exempt flair."""
     mod_list = subreddit_instance.moderator()
 
