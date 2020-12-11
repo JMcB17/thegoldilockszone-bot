@@ -147,8 +147,8 @@ def ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date=None):
 
 def flair_winning_and_losing_posts(top_post, bottom_post):
     """Set appropriate flairs for the given posts."""
-    top_post.mod.flair(flair_template_id=WINNING_POST_FLAIR_ID)
     bottom_post.mod.flair(flair_template_id=LOSING_POST_FLAIR_ID)
+    top_post.mod.flair(flair_template_id=WINNING_POST_FLAIR_ID)
 
 
 def create_new_announcement_post(subreddit_instance, date, top_post, bottom_post):
