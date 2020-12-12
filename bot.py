@@ -5,6 +5,8 @@
 Environment variables:
     BAN_USERS -- users will be auto-banned if this is set to 'True'.
     STICKY_ANNOUNCEMENT -- new daily announcement post will be auto-stickied if this is set to 'True'.
+    USER_MENTION -- the string to put before usernames, set it to 'u/' if you want to mention them.
+    RUN_ON-START -- if this is 'True', the bot will run once on startup regardless of the time.
 
     MEMCACHEDCLOUD_SERVERS, MEMCACHEDCLOUD_USERNAME, MEMCACHEDCLOUD_PASSWORD -- login for memcache.
 
@@ -21,7 +23,6 @@ import bmemcached
 import dateutil.rrule
 
 
-# TODO: test - almost done mostly
 # TODO: checking for if the winning and losing post are the same
 # TODO: more error catching so that if one bit breaks the rest will still work
 # TODO: list of win and lose posts to avoid getting them again?
