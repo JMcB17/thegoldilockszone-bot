@@ -212,7 +212,7 @@ def run_once(reddit_instance, subreddit_instance, memcache_instance, old_announc
     try:
         top_post, bottom_post = get_top_and_bottom_post(reddit_instance, subreddit_instance)
     except IndexError:
-        logging.exception('No valid posts found today! Skipping.')
+        logging.error('No valid posts found today! Skipping.')
     else:
         if BAN_USERS:
             ban_winner_and_loser(subreddit_instance, top_post, bottom_post, date)
